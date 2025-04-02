@@ -1,4 +1,4 @@
-import { Button, Table } from "antd";
+import { Button, Input, Table } from "antd";
 import { useReducer, state } from "react";
 
 const dataSource = [
@@ -31,8 +31,36 @@ const onDelete = (state, action) => {
   };
 };
 
-const onSave = () => {};
-const onEdit = () => {};
+const onSave = (state) => {
+  return {
+    ...state,
+    selectedRow: null,
+    dataSource: state.dataSource.map((value) => {
+      if (value.key === state.selectedRow.key) {
+        return state.selectedRow;
+      }
+
+      return value;
+    }),
+  };
+};
+
+const onSelect = (state, action) => {
+  return {
+    ...state,
+    selectedRow: action.payload,
+  };
+};
+
+const onChange = (state, action) => {
+  return {
+    ...state,
+    selectedRow: {
+      ...state.selectedRow,
+      ...action.payload,
+    },
+  };
+};
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -40,8 +68,10 @@ const reducer = (state, action) => {
       return onDelete(state, action);
     case "SAVE":
       return onSave(state, action);
-    case "Edit":
-      return onEdit(state, action);
+    case "SELECT":
+      return onSelect(state, action);
+    case "CHANGE":
+      return onChange(state, action);
     default:
       return state;
   }
@@ -50,19 +80,36 @@ const reducer = (state, action) => {
 const App = () => {
   const [state, dispatch] = useReducer(reducer, {
     dataSource,
+    selectedRow: null,
   });
   const columns = [
     {
       title: "id",
       dataIndex: "key",
       key: "key",
-      render: (text, record, index) => <span>{index + 1}</span>,
+      render: (_, __, index) => <span>{index + 1}</span>,
     },
     {
       title: "Name",
       dataIndex: "name",
       key: "name",
-      render: (text, record, index) => {
+      render: (_, record) => {
+        if (record.key === state.selectedRow?.key) {
+          return (
+            <Input
+              onChange={(e) => {
+                dispatch({
+                  type: "CHANGE",
+                  payload: {
+                    name: e.target.value,
+                  },
+                });
+              }}
+              value={state.selectedRow.name}
+            />
+          );
+        }
+
         return record.name;
       },
     },
@@ -70,7 +117,23 @@ const App = () => {
       title: "Age",
       dataIndex: "age",
       key: "age",
-      render: (text, record, index) => {
+      render: (_, record) => {
+        if (record.key === state.selectedRow?.key) {
+          return (
+            <Input
+              onChange={(e) => {
+                dispatch({
+                  type: "CHANGE",
+                  payload: {
+                    age: e.target.value,
+                  },
+                });
+              }}
+              value={state.selectedRow.age}
+            />
+          );
+        }
+
         return record.age;
       },
     },
@@ -78,13 +141,56 @@ const App = () => {
       title: "Address",
       dataIndex: "address",
       key: "address",
-      render: (text, record, index) => {
+      render: (_, record) => {
+        if (record.key === state.selectedRow?.key) {
+          return (
+            <Input
+              onChange={(e) => {
+                dispatch({
+                  type: "CHANGE",
+                  payload: {
+                    address: e.target.value,
+                  },
+                });
+              }}
+              value={state.selectedRow.address}
+            />
+          );
+        }
+
         return record.address;
       },
     },
     {
       title: "Actions",
       render: (record) => {
+        if (state.selectedRow?.key === record.key) {
+          return (
+            <div style={{ display: "flex", gap: "8px" }}>
+              <Button
+                onClick={() => {
+                  dispatch({
+                    type: "SELECT",
+                    payload: null,
+                  });
+                }}
+                danger
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  dispatch({
+                    type: "SAVE",
+                  });
+                }}
+              >
+                Save
+              </Button>
+            </div>
+          );
+        }
+
         return (
           <div style={{ display: "flex", gap: "8px" }}>
             <Button
@@ -98,7 +204,16 @@ const App = () => {
             >
               Delete
             </Button>{" "}
-            <Button>Edit</Button>
+            <Button
+              onClick={() => {
+                dispatch({
+                  type: "SELECT",
+                  payload: record,
+                });
+              }}
+            >
+              Edit
+            </Button>
           </div>
         );
       },
