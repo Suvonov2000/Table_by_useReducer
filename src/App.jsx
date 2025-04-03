@@ -1,5 +1,5 @@
 import { Button, Input, Table } from "antd";
-import { useReducer, state } from "react";
+import { useReducer, state, useState } from "react";
 
 const dataSource = [
   {
@@ -62,6 +62,14 @@ const onChange = (state, action) => {
   };
 };
 
+const onAdd = (state, action) => {
+  return {
+    ...state,
+    dataSource: [...state.dataSource, action.payload],
+    ...action.payload,
+  };
+};
+
 const reducer = (state, action) => {
   switch (action.type) {
     case "DELETE":
@@ -74,6 +82,8 @@ const reducer = (state, action) => {
       return onChange(state, action);
     default:
       return state;
+    case "ONADD":
+      return onAdd(state, action);
   }
 };
 
@@ -82,6 +92,13 @@ const App = () => {
     dataSource,
     selectedRow: null,
   });
+
+  const [age, setAge] = useState("");
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+
+  console.log(state);
+
   const columns = [
     {
       title: "id",
@@ -227,14 +244,49 @@ const App = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        flexDirection: "column",
       }}
     >
+      <div style={{ display: "flex", gap: "8px" }}>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Name"
+        />
+        <Input
+          value={age}
+          onChange={(e) => setAge(e.target.value)}
+          placeholder="Age"
+        />
+        <Input
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          placeholder="Address"
+        />
+        <Button
+          onClick={() => {
+            dispatch({
+              type: "ONADD",
+              payload: {
+                key: Math.random(),
+                name,
+                age,
+                address,
+              },
+            });
+            setName("");
+            setAge("");
+            setAddress("");
+          }}
+        >
+          Add
+        </Button>
+      </div>
       <Table
         style={{ width: 600 }}
         dataSource={state.dataSource}
         columns={columns}
       />
-      ;
     </div>
   );
 };
